@@ -23,21 +23,31 @@ wss.on("connection", (ws) => {
 
     console.log("WebSocket client connected");
 
-    const shell = process.platform === "win32"
-        ? "powershell.exe"
-        : "bash";
+    const ptyProcess = pty.spawn(
+        "docker",
+        [
+            "run",
+            "-it",
+            "--rm",
 
-    const ptyProcess = pty.spawn(shell, [], {
+            "--memory=512m",
+            "--cpus=1",
 
-        name: "xterm-color",
+            "ubuntu",
+            "bash"
+        ],
+        {
 
-        cols: 120,
-        rows: 30,
+            name: "xterm-color",
 
-        cwd: process.env.HOME,
+            cols: 120,
+            rows: 30,
 
-        env: process.env,
-    });
+            cwd: process.env.HOME,
+
+            env: process.env,
+        }
+    );
 
     ptyProcess.onData((data) => {
         ws.send(data);
