@@ -6,6 +6,9 @@ import authRoutes from "./src/routes/auth.routes.js";
 import userRoutes from "./src/routes/user.routes.js";
 import containerRoutes from "./src/routes/container.routes.js";
 
+import http from "http";
+import { setupTerminalWS } from "./src/ws/terminal.ws.js";
+
 dotenv.config();
 
 const app = express();
@@ -26,8 +29,12 @@ app.get("/", (_, res) => {
 
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, () => {
+const server = http.createServer(app);
+
+setupTerminalWS(server);
+
+server.listen(PORT, () => {
     console.log(
-        `Server running on port ${PORT}`
+        `Server running on http://localhost:${PORT}`
     );
 });

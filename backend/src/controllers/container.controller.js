@@ -147,3 +147,117 @@ export const getContainerDetails = async (req, res) => {
             });
         }
 };
+
+export const startContainer = async (req, res) => {
+
+        try {
+
+            const userId =
+                req.user.userId;
+
+            const containerId =
+                req.params.id;
+
+            const dbContainer =
+                await prisma.container.findFirst({
+                    where: {
+                        id: containerId,
+                        userId,
+                    },
+                });
+
+            if (!dbContainer) {
+                return res.status(404).json({
+                    message:
+                        "Container not found",
+                });
+            }
+
+            const container =
+                docker.getContainer(
+                    dbContainer.containerId
+                );
+
+            await container.start();
+
+            await prisma.container.update({
+                where: {
+                    id: dbContainer.id,
+                },
+                data: {
+                    status: "running",
+                },
+            });
+
+            return res.json({
+                message:
+                    "Container started",
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            return res.status(500).json({
+                message:
+                    "Failed to start container",
+            });
+        }
+};
+
+export const stopContainer = async (req, res) => {
+
+        try {
+
+            const userId =
+                req.user.userId;
+
+            const containerId =
+                req.params.id;
+
+            const dbContainer =
+                await prisma.container.findFirst({
+                    where: {
+                        id: containerId,
+                        userId,
+                    },
+                });
+
+            if (!dbContainer) {
+                return res.status(404).json({
+                    message:
+                        "Container not found",
+                });
+            }
+
+            const container =
+                docker.getContainer(
+                    dbContainer.containerId
+                );
+
+            await container.stop();
+
+            await prisma.container.update({
+                where: {
+                    id: dbContainer.id,
+                },
+                data: {
+                    status: "stopped",
+                },
+            });
+
+            return res.json({
+                message:
+                    "Container stopped",
+            });
+
+        } catch (error) {
+
+            console.error(error);
+
+            return res.status(500).json({
+                message:
+                    "Failed to stop container",
+            });
+        }
+};
