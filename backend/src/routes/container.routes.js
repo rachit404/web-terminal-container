@@ -6,7 +6,9 @@ from "../middleware/auth.middleware.js";
 import {
     createContainer,
     getMyContainers,
-    getContainerDetails
+    getContainerDetails,
+    startContainer,
+    stopContainer
 }
 from "../controllers/container.controller.js";
 
