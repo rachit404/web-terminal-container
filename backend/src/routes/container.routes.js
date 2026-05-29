@@ -5,6 +5,7 @@ from "../middleware/auth.middleware.js";
 
 import {
     createContainer,
+    getMyContainers
 }
 from "../controllers/container.controller.js";
 
@@ -15,6 +16,11 @@ router.post(
     "/create",
     protect,
     createContainer
+);
+router.get(
+    "/my",
+    protect,
+    getMyContainers
 );
 
 export default router;

@@ -1,8 +1,7 @@
 import docker from "../lib/docker.js";
 import prisma from "../lib/prisma.js";
 
-export const createContainer =
-    async (req, res) => {
+export const createContainer = async (req, res) => {
 
         try {
 
@@ -45,4 +44,34 @@ export const createContainer =
                     "Failed to create container",
             });
         }
-    };
+};
+
+export const getMyContainers = async (req, res) => {
+        try {
+            const userId =
+                req.user.userId;
+
+            const containers =
+                await prisma.container.findMany({
+                    where: {
+                        userId,
+                    },
+                    orderBy: {
+                        createdAt: "desc",
+                    },
+                });
+
+            return res.json(
+                containers
+            );
+
+        } catch (error) {
+
+            console.error(error);
+
+            return res.status(500).json({
+                message:
+                    "Failed to fetch containers",
+            });
+        }
+};
