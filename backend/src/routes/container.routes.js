@@ -5,22 +5,16 @@ from "../middleware/auth.middleware.js";
 
 import {
     createContainer,
-    getMyContainers
+    getMyContainers,
+    getContainerDetails
 }
 from "../controllers/container.controller.js";
 
 const router =
     express.Router();
 
-router.post(
-    "/create",
-    protect,
-    createContainer
-);
-router.get(
-    "/my",
-    protect,
-    getMyContainers
-);
+router.post("/create", protect, createContainer);
+router.get("/my", protect, getMyContainers);
+router.get("/:id", protect, getContainerDetails);
 
 export default router;
