@@ -2,7 +2,7 @@ import { Navigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
 
-export default function ProtectedRoute({
+export default function PublicRoute({
     children,
 }: {
     children: React.ReactNode;
@@ -15,9 +15,11 @@ export default function ProtectedRoute({
         return <div>Loading...</div>;
     }
 
-    if (!user) {
-    return <Navigate to="/login" replace />;
-}
+    if (user) {
+        return (
+            <Navigate to="/" />
+        );
+    }
 
     return children;
 }

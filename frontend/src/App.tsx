@@ -10,6 +10,7 @@ import SignupPage from "./pages/SignupPage";
 import DashboardPage from "./pages/DashboardPage";
 
 import ProtectedRoute from "./components/ProtectedRoute";
+import PublicRoute from "./components/PublicRoute";
 
 export default function App() {
 
@@ -20,12 +21,20 @@ export default function App() {
 
                 <Route
                     path="/login"
-                    element={<LoginPage />}
+                    element={
+                        <PublicRoute>
+                            <LoginPage />
+                        </PublicRoute>
+                    }
                 />
 
                 <Route
                     path="/signup"
-                    element={<SignupPage />}
+                    element={
+                        <PublicRoute>
+                            <SignupPage />
+                        </PublicRoute>
+                    }
                 />
 
                 <Route
