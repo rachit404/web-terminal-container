@@ -104,7 +104,7 @@ export default function LoginPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-semibold p-3 rounded-lg"
+                        className="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-semibold p-3 rounded-lg cursor-pointer"
                     >
                         {loading
                             ? "Logging in..."
@@ -119,8 +119,8 @@ export default function LoginPage() {
 
                     <Link
                         to="/signup"
-                        className="text-cyan-400 ml-2"
-                    >
+                        className="text-cyan-400 ml-2 cursor-pointer"
+                    >   
                         Sign Up
                     </Link>
 
