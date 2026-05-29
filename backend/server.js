@@ -1,76 +1,29 @@
-const express = require("express");
-const http = require("http");
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
 
-const WebSocket = require("ws");
+import authRoutes from "./src/routes/auth.routes.js";
 
-const cors = require("cors");
-
-const pty = require("node-pty");
+dotenv.config();
 
 const app = express();
 
 app.use(cors());
 
-app.get("/", (req, res) => {
-    res.send("HackLab PTY Backend Running");
+app.use(express.json());
+
+app.use("/api/auth", authRoutes);
+
+app.get("/", (_, res) => {
+    res.json({
+        message: "HackLab API Running",
+    });
 });
 
-const server = http.createServer(app);
+const PORT = process.env.PORT || 3000;
 
-const wss = new WebSocket.Server({ server });
-
-wss.on("connection", (ws) => {
-
-    console.log("WebSocket client connected");
-
-    const ptyProcess = pty.spawn(
-        "docker",
-        [
-            "run",
-            "-it",
-            "--rm",
-
-            "--memory=512m",
-            "--cpus=1",
-
-            "ubuntu",
-            "bash"
-        ],
-        {
-
-            name: "xterm-color",
-
-            cols: 120,
-            rows: 30,
-
-            cwd: process.env.HOME,
-
-            env: process.env,
-        }
+app.listen(PORT, () => {
+    console.log(
+        `Server running on port ${PORT}`
     );
-
-    ptyProcess.onData((data) => {
-        ws.send(data);
-    });
-
-    ws.on("message", (message) => {
-        ptyProcess.write(message.toString());
-    });
-
-    ws.on("close", () => {
-
-        console.log("Client disconnected");
-
-        ptyProcess.kill();
-    });
-
-    ws.on("error", (err) => {
-        console.log("WebSocket error:", err);
-
-        ptyProcess.kill();
-    });
-});
-
-server.listen(3000, () => {
-    console.log("PTY backend running on http://localhost:3000");
 });
