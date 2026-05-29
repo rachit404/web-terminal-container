@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 
 import authRoutes from "./src/routes/auth.routes.js";
 import userRoutes from "./src/routes/user.routes.js";
+import containerRoutes from "./src/routes/container.routes.js";
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/user", userRoutes);
+app.use("/api/container", containerRoutes);
 
 app.get("/", (_, res) => {
     res.json({
