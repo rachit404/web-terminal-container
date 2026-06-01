@@ -5,7 +5,13 @@ import { FitAddon } from "@xterm/addon-fit";
 
 import "@xterm/xterm/css/xterm.css";
 
-export default function XTerminal() {
+interface XTerminalProps {
+    containerId: string;
+}
+
+export default function XTerminal({
+    containerId,
+}: XTerminalProps) {
 
     const terminalRef =
         useRef<HTMLDivElement | null>(null);
@@ -59,7 +65,11 @@ export default function XTerminal() {
             );
             term.writeln("");
             term.writeln(
-                "Container terminal will attach here."
+                `Container: ${containerId}`
+            );
+            term.writeln("");
+            term.writeln(
+                "Waiting for terminal connection..."
             );
             term.writeln("");
             term.write("$ ");
