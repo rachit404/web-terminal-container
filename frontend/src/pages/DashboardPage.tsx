@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -13,6 +14,8 @@ import type { Container }
 from "../types/container";
 
 export default function DashboardPage() {
+
+    const navigate = useNavigate();
 
     const { user, logout } =
         useAuth();
@@ -66,7 +69,7 @@ export default function DashboardPage() {
 
                 <button
                     onClick={logout}
-                    className="bg-red-500 px-4 py-2 rounded"
+                    className="bg-red-500 px-4 py-2 rounded cursor-pointer hover:bg-red-400 transition-colors"
                 >
                     Logout
                 </button>
@@ -79,7 +82,7 @@ export default function DashboardPage() {
 
                     <button
                         onClick={handleCreate}
-                        className="bg-cyan-500 text-black px-4 py-2 rounded"
+                        className="bg-cyan-500 text-black px-4 py-2 rounded cursor-pointer hover:bg-cyan-400 transition-colors"
                     >
                         Create Container
                     </button>
@@ -117,7 +120,7 @@ export default function DashboardPage() {
 
                                             loadContainers();
                                         }}
-                                        className="bg-green-600 px-3 py-1 rounded"
+                                        className="bg-green-600 px-3 py-1 rounded cursor-pointer hover:bg-green-400 transition-colors"
                                     >
                                         Start
                                     </button>
@@ -131,13 +134,18 @@ export default function DashboardPage() {
 
                                             loadContainers();
                                         }}
-                                        className="bg-yellow-600 px-3 py-1 rounded"
+                                        className="bg-yellow-600 px-3 py-1 rounded cursor-pointer hover:bg-yellow-400 transition-colors"
                                     >
                                         Stop
                                     </button>
 
                                     <button
-                                        className="bg-cyan-600 px-3 py-1 rounded"
+                                        onClick={() =>
+                                            navigate(
+                                                `/terminal/${container.id}`
+                                            )
+                                        }
+                                        className="bg-cyan-600 px-3 py-1 rounded cursor-pointer hover:bg-cyan-400 transition-colors"
                                     >
                                         Open Terminal
                                     </button>

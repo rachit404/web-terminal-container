@@ -12,6 +12,8 @@ import DashboardPage from "./pages/DashboardPage";
 import ProtectedRoute from "./components/ProtectedRoute";
 import PublicRoute from "./components/PublicRoute";
 
+import TerminalPage from "./pages/TerminalPage";
+
 export default function App() {
 
     return (
@@ -50,6 +52,14 @@ export default function App() {
                     path="*"
                     element={
                         <Navigate to="/" />
+                    }
+                />
+                <Route
+                    path="/terminal/:containerId"
+                    element={
+                        <ProtectedRoute>
+                            <TerminalPage />
+                        </ProtectedRoute>
                     }
                 />
 
