@@ -115,8 +115,13 @@ export default function XTerminal({
         };
 
         socket.onopen = () => {
-            sendResize();
-        };
+
+    console.log(
+        "SOCKET OPEN"
+    );
+
+    sendResize();
+};
 
         const decoder = new TextDecoder();
         socket.binaryType = "arraybuffer";
