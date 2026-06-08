@@ -82,12 +82,16 @@ export default function XTerminal({
             );
         };
 
-        socket.onmessage = (
-            event
-        ) => {
-            term.write(
-                event.data
-            );
+        socket.onmessage = (event) => {
+            if (event.data instanceof Blob) {
+                event.data.text().then(
+                    (text) => {
+                        term.write(text);
+                    }
+                );
+                return;
+            }
+            term.write(event.data);
         };
 
         socket.onerror = () => {

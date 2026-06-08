@@ -103,40 +103,24 @@ export const setupTerminalWS = (server) => {
             );
 
             stream.on("data", (chunk) => {
-
-                if (
-                    ws.readyState === ws.OPEN
-                ) {
-
-                    ws.send(
-                        chunk.toString()
-                    );
+                if (ws.readyState === ws.OPEN) {
+                    ws.send(chunk);
                 }
             });
 
             ws.on("message", (message) => {
-
                 if (stream) {
-
                     stream.write(message);
                 }
             });
 
             ws.on("close", () => {
-
-                console.log(
-                    "WS Closed"
-                );
-
+                console.log("WS Closed");
                 try {
-
                     if (stream) {
-
                         stream.end();
                     }
-
                 } catch (err) {
-
                     console.error(err);
                 }
             });
