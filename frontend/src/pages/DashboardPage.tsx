@@ -30,9 +30,10 @@ export default function DashboardPage() {
             const response =
                 await getMyContainers();
 
-            setContainers(
-                response.data
-            );
+            console.log("Response:", response.data);
+            console.log("Is Array:", Array.isArray(response.data));
+
+            setContainers(response.data);
         };
 
     useEffect(() => {
