@@ -1,79 +1,154 @@
 import { WebSocketServer } from "ws";
 import jwt from "jsonwebtoken";
-import docker from "../lib/docker.js";
 
+import docker from "../lib/docker.js";
 import prisma from "../lib/prisma.js";
 
-export const setupTerminalWS = (
-    server
-) => {
+export const setupTerminalWS = (server) => {
 
-    const wss =
-        new WebSocketServer({
-            server,
-            path: "/terminal",
-        });
+    const wss = new WebSocketServer({
+        server,
+        path: "/terminal",
+    });
 
     wss.on("connection", async (ws, req) => {
-            try {
-                const url = new URL(
-                    req.url,
-                    `http://${req.headers.host}`
+
+        let stream = null;
+
+        try {
+
+            const url = new URL(
+                req.url,
+                `http://${req.headers.host}`
+            );
+
+            const token =
+                url.searchParams.get("token");
+
+            const containerId =
+                url.searchParams.get("containerId");
+
+            if (!token || !containerId) {
+
+                ws.close();
+
+                return;
+            }
+
+            const decoded = jwt.verify(
+                token,
+                process.env.JWT_SECRET
+            );
+
+            const dbContainer =
+                await prisma.container.findFirst({
+                    where: {
+                        id: containerId,
+                        userId: decoded.userId,
+                    },
+                });
+
+            if (!dbContainer) {
+
+                ws.close();
+
+                return;
+            }
+
+            const dockerContainer =
+                docker.getContainer(
+                    dbContainer.containerId
                 );
-                const token =
-                    url.searchParams.get(
-                        "token"
-                    );
-                const containerId =
-                    url.searchParams.get(
-                        "containerId"
-                    );
-                if (!token || !containerId) {
-                    ws.close();
-                    return;
-                }
-                const decoded =
-                    jwt.verify(
-                        token,
-                        process.env.JWT_SECRET
-                    );
-                const container =
-                    await prisma.container.findFirst({
-                        where: {
-                            id: containerId,
-                            userId:
-                                decoded.userId,
-                        },
-                    });
-                if (!container) {
-                    ws.close();
-                    return;
-                }
-                const dockerContainer = docker.getContainer(container.containerId);
-                const exec = await dockerContainer.exec({
-                    Cmd: ["bash"],
+
+            const inspect =
+                await dockerContainer.inspect();
+
+            if (!inspect.State.Running) {
+
+                ws.send(
+                    "\r\nContainer is stopped.\r\n"
+                );
+
+                ws.close();
+
+                return;
+            }
+
+            console.log(
+                "WS Connected:",
+                dbContainer.containerId
+            );
+
+            const exec =
+                await dockerContainer.exec({
+                    Cmd: ["/bin/bash"],
                     AttachStdin: true,
                     AttachStdout: true,
                     AttachStderr: true,
                     Tty: true,
                 });
-                const stream = await exec.start({ hijack: true, stdin: true, });
-                ws.send("Connected to container\r\n");
-                stream.on("data", (data) => {
-                    ws.send(data.toString());
+
+            console.log("Exec Created");
+
+            stream =
+                await exec.start({
+                    hijack: true,
+                    stdin: true,
                 });
-                ws.on("message", (message) => {
+
+            console.log("Stream Started");
+
+            ws.send(
+                "\r\nConnected to container\r\n"
+            );
+
+            stream.on("data", (chunk) => {
+
+                if (
+                    ws.readyState === ws.OPEN
+                ) {
+
+                    ws.send(
+                        chunk.toString()
+                    );
+                }
+            });
+
+            ws.on("message", (message) => {
+
+                if (stream) {
+
                     stream.write(message);
-                });
-                ws.on("close", () => {
-                    try {
+                }
+            });
+
+            ws.on("close", () => {
+
+                console.log(
+                    "WS Closed"
+                );
+
+                try {
+
+                    if (stream) {
+
                         stream.end();
-                    } catch { }
-                });
-                
-            } catch {
-                ws.close();
-            }
+                    }
+
+                } catch (err) {
+
+                    console.error(err);
+                }
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Terminal WS Error:",
+                error
+            );
+
+            ws.close();
         }
-    );
+    });
 };
