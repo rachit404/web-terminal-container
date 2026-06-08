@@ -51,33 +51,105 @@ export default function XTerminal({
             fitAddon
         );
 
-        if (terminalRef.current) {
-
-            term.open(
-                terminalRef.current
-            );
-
-            fitAddon.fit();
-
-            term.writeln("");
-            term.writeln(
-                "Welcome to HackLab"
-            );
-            term.writeln("");
-            term.writeln(
-                `Container: ${containerId}`
-            );
-            term.writeln("");
-            term.writeln(
-                "Waiting for terminal connection..."
-            );
-            term.writeln("");
-            term.write("$ ");
+        if (
+            !terminalRef.current
+        ) {
+            return;
         }
 
-        const resizeHandler = () => {
-            fitAddon.fit();
+        term.open(
+            terminalRef.current
+        );
+
+        fitAddon.fit();
+
+        term.writeln("");
+        term.writeln(
+            "Welcome to HackLab"
+        );
+        term.writeln("");
+
+        term.writeln(
+            `Container: ${containerId}`
+        );
+
+        term.writeln("");
+
+        const token =
+            localStorage.getItem(
+                "token"
+            );
+
+        if (!token) {
+
+            term.writeln(
+                "Authentication token not found."
+            );
+
+            return;
+        }
+
+        const protocol =
+            window.location.protocol ===
+            "https:"
+                ? "wss"
+                : "ws";
+
+        const socket =
+            new WebSocket(
+                `${protocol}://${window.location.host}/terminal?token=${token}&containerId=${containerId}`
+            );
+
+        socket.onopen = () => {
+
+            term.writeln(
+                "Connecting..."
+            );
         };
+
+        socket.onmessage = (
+            event
+        ) => {
+
+            term.write(
+                event.data
+            );
+        };
+
+        socket.onerror = () => {
+
+            term.writeln(
+                "\r\n[WebSocket Error]"
+            );
+        };
+
+        socket.onclose = () => {
+
+            term.writeln(
+                "\r\n[Connection Closed]"
+            );
+        };
+
+        term.onData(
+            (data) => {
+
+                if (
+                    socket.readyState ===
+                    WebSocket.OPEN
+                ) {
+
+                    socket.send(
+                        data
+                    );
+                }
+            }
+        );
+
+        const resizeHandler =
+            () => {
+
+                fitAddon.fit();
+            };
 
         window.addEventListener(
             "resize",
@@ -91,10 +163,12 @@ export default function XTerminal({
                 resizeHandler
             );
 
+            socket.close();
+
             term.dispose();
         };
 
-    }, []);
+    }, [containerId]);
 
     return (
         <div

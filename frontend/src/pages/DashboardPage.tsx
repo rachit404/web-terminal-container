@@ -141,8 +141,9 @@ export default function DashboardPage() {
 
                                     <button
                                         onClick={() =>
-                                            navigate(
-                                                `/terminal/${container.id}`
+                                            window.open(
+                                                `/terminal/${container.id}`,
+                                                "_blank"
                                             )
                                         }
                                         className="bg-cyan-600 px-3 py-1 rounded cursor-pointer hover:bg-cyan-400 transition-colors"
