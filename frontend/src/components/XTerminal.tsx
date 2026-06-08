@@ -81,18 +81,36 @@ export default function XTerminal({
             );
 
         const sendResize = () => {
+
+            console.log(
+                "SEND RESIZE",
+                {
+                    cols: term.cols,
+                    rows: term.rows,
+                    state: socket.readyState,
+                }
+            );
+
             fitAddon.fit();
+
             if (
                 socket.readyState ===
                 WebSocket.OPEN
             ) {
-                socket.send(
+
+                const payload =
                     JSON.stringify({
                         type: "resize",
                         cols: term.cols,
                         rows: term.rows,
-                    })
+                    });
+
+                console.log(
+                    "SENDING:",
+                    payload
                 );
+
+                socket.send(payload);
             }
         };
 
