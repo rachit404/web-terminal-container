@@ -18,8 +18,8 @@ export default function XTerminal({
 
     useEffect(() => {
         const term = new Terminal({
+            convertEol: true,
             cursorBlink: true,
-
             fontSize: 15,
 
             fontFamily:
@@ -82,15 +82,27 @@ export default function XTerminal({
             );
         };
 
+        const decoder = new TextDecoder();
+        socket.binaryType = "arraybuffer";
+
         socket.onmessage = (event) => {
-            if (event.data instanceof Blob) {
-                event.data.text().then(
-                    (text) => {
-                        term.write(text);
-                    }
+
+            if (
+                event.data instanceof ArrayBuffer
+            ) {
+
+                term.write(
+                    decoder.decode(
+                        event.data,
+                        {
+                            stream: true,
+                        }
+                    )
                 );
+
                 return;
             }
+
             term.write(event.data);
         };
 

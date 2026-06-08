@@ -81,7 +81,7 @@ export const setupTerminalWS = (server) => {
 
             const exec =
                 await dockerContainer.exec({
-                    Cmd: ["/bin/bash"],
+                    Cmd: ["/bin/bash", "-i"],
                     AttachStdin: true,
                     AttachStdout: true,
                     AttachStderr: true,
