@@ -109,10 +109,7 @@ export default function XTerminal({
         };
 
         term.onData((data) => {
-            if (
-                socket.readyState ===
-                WebSocket.OPEN
-            ) {
+            if (socket.readyState === WebSocket.OPEN) {
                 socket.send(data);
             }
         });

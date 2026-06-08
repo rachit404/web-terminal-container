@@ -98,9 +98,9 @@ export const setupTerminalWS = (server) => {
 
             console.log("Stream Started");
 
-            ws.send(
-                "\r\nConnected to container\r\n"
-            );
+            // ws.send(
+            //     "\r\nConnected to container\r\n"
+            // );
 
             stream.on("data", (chunk) => {
                 if (ws.readyState === ws.OPEN) {
