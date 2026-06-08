@@ -80,7 +80,25 @@ export default function XTerminal({
                 `${WS_URL}/terminal?token=${token}&containerId=${containerId}`
             );
 
-        socket.onopen = () => {};
+        const sendResize = () => {
+            fitAddon.fit();
+            if (
+                socket.readyState ===
+                WebSocket.OPEN
+            ) {
+                socket.send(
+                    JSON.stringify({
+                        type: "resize",
+                        cols: term.cols,
+                        rows: term.rows,
+                    })
+                );
+            }
+        };
+
+        socket.onopen = () => {
+            sendResize();
+        };
 
         const decoder = new TextDecoder();
         socket.binaryType = "arraybuffer";
@@ -126,16 +144,9 @@ export default function XTerminal({
             }
         });
 
-        const resizeHandler =
-            () => {
-                fitAddon.fit();
-                console.log(
-    "ROWS:",
-    term.rows,
-    "COLS:",
-    term.cols
-);
-            };
+        const resizeHandler = () => {
+            sendResize();
+        };
 
         window.addEventListener(
             "resize",

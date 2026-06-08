@@ -108,10 +108,23 @@ export const setupTerminalWS = (server) => {
                 }
             });
 
-            ws.on("message", (message) => {
-                if (stream) {
-                    stream.write(message);
-                }
+            ws.on("message",async (message) => {
+                try {
+                    const data = JSON.parse(message.toString());
+
+                    if (data.type === "resize") {
+                        await exec.resize({
+                            w: data.cols,
+                            h: data.rows,
+                        });
+                        console.log("RESIZED:",
+                            data.cols,data.rows
+                        );
+                        return;
+                    }
+                } catch {}
+
+                stream.write(message);
             });
 
             ws.on("close", () => {
