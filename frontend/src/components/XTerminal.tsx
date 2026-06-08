@@ -4,6 +4,7 @@ import { Terminal } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 
 import "@xterm/xterm/css/xterm.css";
+import { WS_URL } from "../config/env";
 
 interface XTerminalProps {
     containerId: string;
@@ -12,14 +13,11 @@ interface XTerminalProps {
 export default function XTerminal({
     containerId,
 }: XTerminalProps) {
-
     const terminalRef =
         useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
-
         const term = new Terminal({
-
             cursorBlink: true,
 
             fontSize: 15,
@@ -28,7 +26,7 @@ export default function XTerminal({
                 "Fira Code, Consolas, monospace",
 
             theme: {
-                background: "#020617",
+                background: "#0f172a",
                 foreground: "#e2e8f0",
 
                 cursor: "#38bdf8",
@@ -47,13 +45,9 @@ export default function XTerminal({
         const fitAddon =
             new FitAddon();
 
-        term.loadAddon(
-            fitAddon
-        );
+        term.loadAddon(fitAddon);
 
-        if (
-            !terminalRef.current
-        ) {
+        if (!terminalRef.current) {
             return;
         }
 
@@ -63,83 +57,64 @@ export default function XTerminal({
 
         fitAddon.fit();
 
-        term.writeln("");
-        term.writeln(
-            "Welcome to HackLab"
-        );
-        term.writeln("");
-
-        term.writeln(
-            `Container: ${containerId}`
-        );
-
-        term.writeln("");
-
         const token =
             localStorage.getItem(
                 "token"
             );
 
         if (!token) {
-
             term.writeln(
-                "Authentication token not found."
+                "\r\nAuthentication token not found."
             );
 
             return;
         }
 
-        const socket = new WebSocket(
-            `ws://localhost:3000/terminal?token=${token}&containerId=${containerId}`
-        );
+        const socket =
+            new WebSocket(
+                `${WS_URL}/terminal?token=${token}&containerId=${containerId}`
+            );
 
         socket.onopen = () => {
-
-            console.log("✅ WS OPEN");
-
             term.writeln("");
-            term.writeln("[Connected to backend]");
+            term.writeln(
+                "[Connected to backend]"
+            );
         };
 
-        socket.onmessage = (event) => {
-
-            console.log("📩 WS MESSAGE:", event.data);
-
-            term.write(event.data);
+        socket.onmessage = (
+            event
+        ) => {
+            term.write(
+                event.data
+            );
         };
 
-        socket.onerror = (error) => {
-
-            console.error("❌ WS ERROR:", error);
-
+        socket.onerror = () => {
             term.writeln("");
-            term.writeln("[WebSocket Error]");
+            term.writeln(
+                "[WebSocket Error]"
+            );
         };
 
-        socket.onclose = (event) => {
-
-            console.log("🔌 WS CLOSED", event);
-
+        socket.onclose = () => {
             term.writeln("");
-            term.writeln("[Connection Closed]");
+            term.writeln(
+                "[Connection Closed]"
+            );
         };
 
         term.onData((data) => {
-
-            console.log("⌨️ KEY:", JSON.stringify(data));
-
             if (
                 socket.readyState ===
                 WebSocket.OPEN
             ) {
-
                 socket.send(data);
             }
         });
 
         const resizeHandler =
             () => {
-
                 fitAddon.fit();
             };
 
@@ -149,17 +124,22 @@ export default function XTerminal({
         );
 
         return () => {
-
             window.removeEventListener(
                 "resize",
                 resizeHandler
             );
 
-            socket.close();
+            if (
+                socket.readyState ===
+                    WebSocket.OPEN ||
+                socket.readyState ===
+                    WebSocket.CONNECTING
+            ) {
+                socket.close();
+            }
 
             term.dispose();
         };
-
     }, [containerId]);
 
     return (
