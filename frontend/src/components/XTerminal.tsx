@@ -124,7 +124,12 @@ export default function XTerminal({
         const resizeHandler =
             () => {
                 fitAddon.fit();
-                console.log(term.rows, term.cols);
+                console.log(
+    "ROWS:",
+    term.rows,
+    "COLS:",
+    term.cols
+);
             };
 
         window.addEventListener(
