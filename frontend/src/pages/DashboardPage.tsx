@@ -93,7 +93,7 @@ export default function DashboardPage() {
 
                 <div className="grid gap-4">
 
-                    {containers.map(
+                    {containers.length ? containers.map(
                         (container) => (
 
                             <div
@@ -157,6 +157,10 @@ export default function DashboardPage() {
 
                             </div>
                         )
+                    ) : (
+                        <div>
+                            <p>No containers found</p>
+                        </div>
                     )}
 
                 </div>
