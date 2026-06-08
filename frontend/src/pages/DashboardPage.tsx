@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 
 import { useAuth } from "../context/AuthContext";
 
@@ -15,7 +15,7 @@ from "../types/container";
 
 export default function DashboardPage() {
 
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
 
     const { user, logout } =
         useAuth();
@@ -48,6 +48,8 @@ export default function DashboardPage() {
 
             await loadContainers();
         };
+
+    console.log(containers);
 
     return (
 
