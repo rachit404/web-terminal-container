@@ -89,61 +89,53 @@ export default function XTerminal({
             return;
         }
 
-        const protocol =
-            window.location.protocol ===
-            "https:"
-                ? "wss"
-                : "ws";
-
-        const socket =
-            new WebSocket(
-                `${protocol}://${window.location.host}/terminal?token=${token}&containerId=${containerId}`
-            );
+        const socket = new WebSocket(
+            `ws://localhost:3000/terminal?token=${token}&containerId=${containerId}`
+        );
 
         socket.onopen = () => {
 
-            term.writeln(
-                "Connecting..."
-            );
+            console.log("✅ WS OPEN");
+
+            term.writeln("");
+            term.writeln("[Connected to backend]");
         };
 
-        socket.onmessage = (
-            event
-        ) => {
+        socket.onmessage = (event) => {
 
-            term.write(
-                event.data
-            );
+            console.log("📩 WS MESSAGE:", event.data);
+
+            term.write(event.data);
         };
 
-        socket.onerror = () => {
+        socket.onerror = (error) => {
 
-            term.writeln(
-                "\r\n[WebSocket Error]"
-            );
+            console.error("❌ WS ERROR:", error);
+
+            term.writeln("");
+            term.writeln("[WebSocket Error]");
         };
 
-        socket.onclose = () => {
+        socket.onclose = (event) => {
 
-            term.writeln(
-                "\r\n[Connection Closed]"
-            );
+            console.log("🔌 WS CLOSED", event);
+
+            term.writeln("");
+            term.writeln("[Connection Closed]");
         };
 
-        term.onData(
-            (data) => {
+        term.onData((data) => {
 
-                if (
-                    socket.readyState ===
-                    WebSocket.OPEN
-                ) {
+            console.log("⌨️ KEY:", JSON.stringify(data));
 
-                    socket.send(
-                        data
-                    );
-                }
+            if (
+                socket.readyState ===
+                WebSocket.OPEN
+            ) {
+
+                socket.send(data);
             }
-        );
+        });
 
         const resizeHandler =
             () => {
