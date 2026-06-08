@@ -30,9 +30,6 @@ export default function DashboardPage() {
             const response =
                 await getMyContainers();
 
-            console.log("Response:", response.data);
-            console.log("Is Array:", Array.isArray(response.data));
-
             setContainers(response.data);
         };
 
@@ -49,8 +46,6 @@ export default function DashboardPage() {
 
             await loadContainers();
         };
-
-    console.log(containers);
 
     return (
 
