@@ -75,12 +75,7 @@ export default function XTerminal({
                 `${WS_URL}/terminal?token=${token}&containerId=${containerId}`
             );
 
-        socket.onopen = () => {
-            term.writeln("");
-            term.writeln(
-                "[Connected to backend]"
-            );
-        };
+        socket.onopen = () => {};
 
         const decoder = new TextDecoder();
         socket.binaryType = "arraybuffer";
