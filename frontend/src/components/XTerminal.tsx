@@ -56,6 +56,11 @@ export default function XTerminal({
         );
 
         fitAddon.fit();
+        console.log(
+            "INITIAL SIZE:",
+            term.cols,
+            term.rows
+        );
 
         const token =
             localStorage.getItem(
