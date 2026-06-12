@@ -8,6 +8,7 @@ import {
     createContainer,
     startContainer,
     stopContainer,
+    deleteContainer,
 } from "../services/container.service";
 
 import type { Container }
@@ -43,6 +44,20 @@ export default function DashboardPage() {
         async () => {
 
             await createContainer();
+
+            await loadContainers();
+        };
+
+        const handleDelete = async (containerId: string) => {
+            const confirmed =  window.confirm("Delete this container permanently?");
+
+            if (!confirmed) {
+                return;
+            }
+
+            await deleteContainer(
+                containerId
+            );
 
             await loadContainers();
         };
@@ -147,6 +162,16 @@ export default function DashboardPage() {
                                         className="bg-cyan-600 px-3 py-1 rounded cursor-pointer hover:bg-cyan-400 transition-colors"
                                     >
                                         Open Terminal
+                                    </button>
+                                    <button
+                                        onClick={() =>
+                                            handleDelete(
+                                                container.id
+                                            )
+                                        }
+                                        className="bg-red-600 px-3 py-1 rounded cursor-pointer hover:bg-red-400 transition-colors"
+                                    >
+                                        Delete
                                     </button>
 
                                 </div>

@@ -25,3 +25,12 @@ export const stopContainer = async (
     );
 };
 
+export const deleteContainer = (
+    id: string
+) => {
+
+    return api.delete(
+        `/container/${id}`
+    );
+};
+
