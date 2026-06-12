@@ -116,11 +116,11 @@ const inspect =
 
             console.log("Exec Created");
 
-            stream =
-    await exec.start({
-        hijack: true,
-        stdin: true,
-    });
+            stream = await exec.start({
+                        hijack: true,
+                        stdin: true,
+                    });
+            stream.write("stty -echo\r");
 
 console.log("Stream Started");
 
