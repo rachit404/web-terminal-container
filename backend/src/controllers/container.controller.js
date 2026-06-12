@@ -261,3 +261,97 @@ export const stopContainer = async (req, res) => {
             });
         }
 };
+
+export const deleteContainer = async (
+    req,
+    res
+) => {
+
+    try {
+
+        const userId =
+            req.user.userId;
+
+        const containerId =
+            req.params.id;
+
+        const dbContainer =
+            await prisma.container.findFirst({
+                where: {
+                    id: containerId,
+                    userId,
+                },
+            });
+
+        if (!dbContainer) {
+
+            return res.status(404).json({
+                message:
+                    "Container not found",
+            });
+        }
+
+        const container =
+            docker.getContainer(
+                dbContainer.containerId
+            );
+
+        try {
+
+            const inspect =
+                await container.inspect();
+
+            if (
+                inspect.State.Running
+            ) {
+
+                await container.stop();
+            }
+
+        } catch (err) {
+
+            console.log(
+                "Container already stopped"
+            );
+        }
+
+        try {
+
+            await container.remove({
+                force: true,
+            });
+
+        } catch (err) {
+
+            console.error(
+                "Docker remove error:",
+                err
+            );
+
+            return res.status(500).json({
+                message:
+                    "Failed to remove Docker container",
+            });
+        }
+
+        await prisma.container.delete({
+            where: {
+                id: dbContainer.id,
+            },
+        });
+
+        return res.json({
+            message:
+                "Container deleted successfully",
+        });
+
+    } catch (error) {
+
+        console.error(error);
+
+        return res.status(500).json({
+            message:
+                "Failed to delete container",
+        });
+    }
+};

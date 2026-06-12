@@ -8,9 +8,9 @@ import {
     getMyContainers,
     getContainerDetails,
     startContainer,
-    stopContainer
-}
-from "../controllers/container.controller.js";
+    stopContainer,
+    deleteContainer,
+} from "../controllers/container.controller.js";
 
 const router =
     express.Router();
@@ -20,5 +20,6 @@ router.get("/my", protect, getMyContainers);
 router.get("/:id", protect, getContainerDetails);
 router.post("/:id/start", protect, startContainer);
 router.post("/:id/stop", protect, stopContainer);
+router.delete("/:id", protect, deleteContainer);
 
 export default router;
