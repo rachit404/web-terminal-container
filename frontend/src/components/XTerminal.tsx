@@ -123,8 +123,15 @@ export default function XTerminal({
     sendResize();
 };
 
+       const decoder = new TextDecoder();
+        socket.binaryType = "arraybuffer";
+
         socket.onmessage = (event) => {
-            console.log("WS GOT DATA", event.data);
+            if (event.data instanceof ArrayBuffer) {
+                term.write(decoder.decode(event.data));
+                return;
+            }
+
             term.write(event.data);
         };
 

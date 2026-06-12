@@ -142,13 +142,11 @@ if (pendingResize) {
             //     "\r\nConnected to container\r\n"
             // );
 
-            stream.on("data", (chunk) => {
-    if (ws.readyState === ws.OPEN) {
-        ws.send(
-            chunk.toString("utf8")
-        );
-    }
-});
+stream.on("data", (chunk) => {
+        if (ws.readyState === ws.OPEN) {
+            ws.send(chunk);
+        }
+    });
 
 ws.removeAllListeners("message");
 
