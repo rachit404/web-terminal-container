@@ -143,10 +143,12 @@ if (pendingResize) {
             // );
 
             stream.on("data", (chunk) => {
-                if (ws.readyState === ws.OPEN) {
-                    ws.send(chunk);
-                }
-            });
+    if (ws.readyState === ws.OPEN) {
+        ws.send(
+            chunk.toString("utf8")
+        );
+    }
+});
 
 ws.removeAllListeners("message");
 
