@@ -56,11 +56,10 @@ export default function XTerminal({
         );
 
         fitAddon.fit();
-        console.log(
-            "INITIAL SIZE:",
-            term.cols,
-            term.rows
-        );
+
+        setTimeout(() => {
+            sendResize();
+        }, 100);
 
         const token =
             localStorage.getItem(
@@ -82,15 +81,6 @@ export default function XTerminal({
 
         const sendResize = () => {
 
-            console.log(
-                "SEND RESIZE",
-                {
-                    cols: term.cols,
-                    rows: term.rows,
-                    state: socket.readyState,
-                }
-            );
-
             fitAddon.fit();
 
             if (
@@ -105,34 +95,23 @@ export default function XTerminal({
                         rows: term.rows,
                     });
 
-                console.log(
-                    "SENDING:",
-                    payload
-                );
 
                 socket.send(payload);
             }
         };
 
         socket.onopen = () => {
-
-    console.log(
-        "SOCKET OPEN"
-    );
-
-    sendResize();
-};
-
-       const decoder = new TextDecoder();
-        socket.binaryType = "arraybuffer";
+            sendResize();
+        };
 
         socket.onmessage = (event) => {
-            if (event.data instanceof ArrayBuffer) {
-                term.write(decoder.decode(event.data));
-                return;
-            }
 
-            term.write(event.data);
+            const msg = JSON.parse(event.data);
+
+            if (msg.type === "output") {
+
+                term.write(msg.data);
+            }
         };
 
         socket.onerror = () => {
@@ -150,11 +129,22 @@ export default function XTerminal({
         };
 
         term.onData((data) => {
-            if (socket.readyState === WebSocket.OPEN) {
-                socket.send(data);
-            }
-        });
 
+    if (
+        socket.readyState ===
+        WebSocket.OPEN
+    ) {
+
+        socket.send(
+            JSON.stringify({
+                type:
+                    "input",
+
+                data,
+            })
+        );
+    }
+});
         const resizeHandler = () => {
             sendResize();
         };

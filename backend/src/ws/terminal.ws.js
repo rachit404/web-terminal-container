@@ -1,7 +1,7 @@
 import { WebSocketServer } from "ws";
 import jwt from "jsonwebtoken";
+import * as pty from "node-pty";
 
-import docker from "../lib/docker.js";
 import prisma from "../lib/prisma.js";
 
 export const setupTerminalWS = (server) => {
@@ -11,195 +11,179 @@ export const setupTerminalWS = (server) => {
         path: "/terminal",
     });
 
-    wss.on("connection", async (ws, req) => {
+    wss.on(
+        "connection",
+        async (ws, req) => {
 
-        let stream = null;
+            let shell = null;
 
-        try {
+            try {
 
-            const url = new URL(
-                req.url,
-                `http://${req.headers.host}`
-            );
+                const url = new URL(
+                    req.url,
+                    `http://${req.headers.host}`
+                );
 
-            const token =
-                url.searchParams.get("token");
+                const token =
+                    url.searchParams.get(
+                        "token"
+                    );
 
-            const containerId =
-                url.searchParams.get("containerId");
+                const containerId =
+                    url.searchParams.get(
+                        "containerId"
+                    );
 
-            if (!token || !containerId) {
+                if (
+                    !token ||
+                    !containerId
+                ) {
 
-                ws.close();
+                    ws.close();
 
-                return;
-            }
+                    return;
+                }
 
-            const decoded = jwt.verify(
-                token,
-                process.env.JWT_SECRET
-            );
+                const decoded =
+                    jwt.verify(
+                        token,
+                        process.env.JWT_SECRET
+                    );
 
-            const dbContainer =
-                await prisma.container.findFirst({
-                    where: {
-                        id: containerId,
-                        userId: decoded.userId,
-                    },
-                });
+                const dbContainer =
+                    await prisma.container.findFirst({
+                        where: {
+                            id: containerId,
+                            userId:
+                                decoded.userId,
+                        },
+                    });
 
-            if (!dbContainer) {
+                if (!dbContainer) {
 
-                ws.close();
+                    ws.close();
 
-                return;
-            }
+                    return;
+                }
 
-            let pendingResize = null;
+                shell =
+                    pty.spawn(
+                        "docker",
+                        [
+                            "exec",
+                            "-it",
+                            dbContainer.containerId,
+                            "bash",
+                        ],
+                        {
+                            name:
+                                "xterm-256color",
 
-ws.on("message", (message) => {
+                            cols: 120,
+                            rows: 30,
 
-    try {
+                            cwd:
+                                "/",
 
-        const data = JSON.parse(
-            message.toString()
-        );
+                            env:
+                                process.env,
+                        }
+                    );
 
-        if (
-            data.type === "resize"
-        ) {
+                shell.onData(
+                    (data) => {
 
-            console.log(
-                "EARLY RESIZE:",
-                data.cols,
-                data.rows
-            );
+                        if (ws.readyState === WebSocket.OPEN) {
 
-            pendingResize = data;
-        }
+                            ws.send(
+                                JSON.stringify({
+                                    type:
+                                        "output",
 
-    } catch {}
-});
+                                    data,
+                                })
+                            );
+                        }
+                    }
+                );
 
-const dockerContainer =
-    docker.getContainer(
-        dbContainer.containerId
-    );
+                ws.on(
+                    "message",
+                    (message) => {
 
-const inspect =
-    await dockerContainer.inspect();
+                        try {
 
-            if (!inspect.State.Running) {
+                            const msg =
+                                JSON.parse(
+                                    message.toString()
+                                );
 
-                ws.send(
-                    "\r\nContainer is stopped.\r\n"
+                            if (
+                                msg.type ===
+                                "input"
+                            ) {
+
+                                shell.write(
+                                    msg.data
+                                );
+
+                                return;
+                            }
+
+                            if (
+                                msg.type ===
+                                "resize"
+                            ) {
+
+                                shell.resize(
+                                    msg.cols,
+                                    msg.rows
+                                );
+
+                                return;
+                            }
+
+                        } catch (
+                            err
+                        ) {
+
+                            console.error(
+                                err
+                            );
+                        }
+                    }
+                );
+
+                ws.on(
+                    "close",
+                    () => {
+
+                        if (
+                            shell
+                        ) {
+
+                            shell.kill();
+                        }
+                    }
+                );
+
+            } catch (
+                error
+            ) {
+
+                console.error(
+                    error
                 );
 
                 ws.close();
 
-                return;
-            }
+                if (
+                    shell
+                ) {
 
-            console.log(
-                "WS Connected:",
-                dbContainer.containerId
-            );
-
-            const exec =
-                await dockerContainer.exec({
-                    Cmd: ["/bin/bash", "-i"],
-                    AttachStdin: true,
-                    AttachStdout: true,
-                    AttachStderr: true,
-                    Tty: true,
-                });
-
-            console.log("Exec Created");
-
-            stream = await exec.start({
-                        hijack: true,
-                        stdin: true,
-                    });
-            stream.write("stty -echo\r");
-
-console.log("Stream Started");
-
-if (pendingResize) {
-
-    await exec.resize({
-        w: pendingResize.cols,
-        h: pendingResize.rows,
-    });
-
-    console.log(
-        "INITIAL RESIZE:",
-        pendingResize.cols,
-        pendingResize.rows
-    );
-}
-
-            // ws.send(
-            //     "\r\nConnected to container\r\n"
-            // );
-
-stream.on("data", (chunk) => {
-        if (ws.readyState === ws.OPEN) {
-            ws.send(chunk);
-        }
-    });
-
-ws.removeAllListeners("message");
-
-ws.on("message", async (message) => {
-
-    try {
-
-        const data = JSON.parse(
-            message.toString()
-        );
-
-        if (
-            data.type === "resize"
-        ) {
-
-            await exec.resize({
-                w: data.cols,
-                h: data.rows,
-            });
-
-            console.log(
-                "RESIZED:",
-                data.cols,
-                data.rows
-            );
-
-            return;
-        }
-
-    } catch {}
-
-    stream.write(message);
-});
-
-            ws.on("close", () => {
-                console.log("WS Closed");
-                try {
-                    if (stream) {
-                        stream.end();
-                    }
-                } catch (err) {
-                    console.error(err);
+                    shell.kill();
                 }
-            });
-
-        } catch (error) {
-
-            console.error(
-                "Terminal WS Error:",
-                error
-            );
-
-            ws.close();
+            }
         }
-    });
+    );
 };
