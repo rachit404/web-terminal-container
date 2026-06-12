@@ -55,13 +55,39 @@ export const setupTerminalWS = (server) => {
                 return;
             }
 
-            const dockerContainer =
-                docker.getContainer(
-                    dbContainer.containerId
-                );
+            let pendingResize = null;
 
-            const inspect =
-                await dockerContainer.inspect();
+ws.on("message", (message) => {
+
+    try {
+
+        const data = JSON.parse(
+            message.toString()
+        );
+
+        if (
+            data.type === "resize"
+        ) {
+
+            console.log(
+                "EARLY RESIZE:",
+                data.cols,
+                data.rows
+            );
+
+            pendingResize = data;
+        }
+
+    } catch {}
+});
+
+const dockerContainer =
+    docker.getContainer(
+        dbContainer.containerId
+    );
+
+const inspect =
+    await dockerContainer.inspect();
 
             if (!inspect.State.Running) {
 
@@ -91,12 +117,26 @@ export const setupTerminalWS = (server) => {
             console.log("Exec Created");
 
             stream =
-                await exec.start({
-                    hijack: true,
-                    stdin: true,
-                });
+    await exec.start({
+        hijack: true,
+        stdin: true,
+    });
 
-            console.log("Stream Started");
+console.log("Stream Started");
+
+if (pendingResize) {
+
+    await exec.resize({
+        w: pendingResize.cols,
+        h: pendingResize.rows,
+    });
+
+    console.log(
+        "INITIAL RESIZE:",
+        pendingResize.cols,
+        pendingResize.rows
+    );
+}
 
             // ws.send(
             //     "\r\nConnected to container\r\n"
@@ -108,32 +148,19 @@ export const setupTerminalWS = (server) => {
                 }
             });
 
-            ws.on("message", async (message) => {
+ws.removeAllListeners("message");
 
-    console.log(
-        "RAW:",
-        message.toString()
-    );
+ws.on("message", async (message) => {
 
     try {
 
-        const data =
-            JSON.parse(
-                message.toString()
-            );
-
-        console.log(
-            "PARSED:",
-            data
+        const data = JSON.parse(
+            message.toString()
         );
 
         if (
             data.type === "resize"
         ) {
-
-            console.log(
-                "RESIZE REQUEST"
-            );
 
             await exec.resize({
                 w: data.cols,
@@ -141,18 +168,15 @@ export const setupTerminalWS = (server) => {
             });
 
             console.log(
-                "RESIZE DONE"
+                "RESIZED:",
+                data.cols,
+                data.rows
             );
 
             return;
         }
 
-    } catch (err) {
-
-        console.log(
-            "NOT JSON"
-        );
-    }
+    } catch {}
 
     stream.write(message);
 });
